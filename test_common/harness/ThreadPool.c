@@ -486,6 +486,8 @@ void ThreadPool_Init(void)
         }
 #else // !_WIN32
         gThreadCount = (cl_int) sysconf(_SC_NPROCESSORS_CONF);       // Hopefully your system returns logical cpus here, as does MacOS X
+        if (gThreadCount > 16)
+            gThreadCount = 16;
 #endif // !_WIN32
 
         // Multithreaded tests are required to run multithreaded even on unicore systems so as to test thread safety
