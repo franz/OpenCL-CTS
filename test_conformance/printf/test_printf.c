@@ -27,7 +27,9 @@
 #include <string.h>
 
 #if ! defined( _WIN32)
+#ifndef __linux__
 #include <sys/sysctl.h>
+#endif
 #include <unistd.h>
 #define streamDup(fd1) dup(fd1)
 #define streamDup2(fd1,fd2) dup2(fd1,fd2)

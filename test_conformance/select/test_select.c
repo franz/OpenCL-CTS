@@ -29,7 +29,9 @@
 #include <math.h>
 #include <string.h>
 #if ! defined( _WIN32)
+#ifndef __linux__
 #include <sys/sysctl.h>
+#endif
 #endif
 #include <limits.h>
 #include "test_select.h"

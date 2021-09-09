@@ -19,7 +19,9 @@
 
 #if !defined (_WIN32)
 #include <sys/resource.h>
+#ifndef __linux__
 #include <sys/sysctl.h>
+#endif
 #include <libgen.h>
 #include <sys/param.h>
 #endif

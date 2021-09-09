@@ -20,8 +20,10 @@
 #define MAX(x,y) ((x>y)?x:y);
 #define MIN(x,y) ((x<y)?x:y);
 #endif
-#if !defined(_WIN32)
+#if ! defined( _WIN32)
+#ifndef __linux__
 #include <sys/sysctl.h>
+#endif
 #endif
 
 #if defined( __linux__ )
