@@ -29,22 +29,30 @@ option(SANITIZER_ADDRESS "Build with the address sanitizer" OFF)
 option(SANITIZER_THREAD "Build with the thread sanitizer" OFF)
 option(SANITIZER_UNDEFINED "Build with the undefined behavior sanitizer" OFF)
 
+if(ENABLE_ASAN)
+  set(SANITIZER_ADDRESS ON CACHE BOOL "asan")
+endif()
+if(ENABLE_TSAN)
+  set(SANITIZER_THREAD ON CACHE BOOL "tsan")
+endif()
+
 if (SANITIZER_ADDRESS AND SANITIZER_THREAD)
     message(FATAL_ERROR "SANITIZER_ADDRESS and SANITIZER_THREAD cannot be enabled together.")
 endif()
 
 if (SANITIZER_ADDRESS)
-    add_compile_options(-fsanitize=address)
+    add_compile_options(-fsanitize=address -fsanitize-recover=address -fno-omit-frame-pointer -ggdb)
     add_link_options(-fsanitize=address)
 elseif (SANITIZER_THREAD)
-    add_compile_options(-fsanitize=thread)
+    add_compile_options(-fsanitize=thread -fno-omit-frame-pointer -ggdb)
     add_link_options(-fsanitize=thread)
 endif()
 
 if (SANITIZER_UNDEFINED)
-    add_compile_options(-fsanitize=undefined)
+    add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer -ggdb)
     add_link_options(-fsanitize=undefined)
 endif (SANITIZER_UNDEFINED)
+
 
 #-----------------------------------------------------------
 # Default Configurable Test Set
@@ -209,6 +217,7 @@ if(WIN32 AND ${CLConform_TARGET_ARCH} STREQUAL "x86")
 endif()
 
 list(APPEND CLConform_LIBRARIES ${OPENCL_LIBRARIES})
+
 if(ANDROID)
     list(APPEND CLConform_LIBRARIES m)
 endif()
@@ -229,6 +238,8 @@ if(APPLE)
     list(APPEND CLConform_LIBRARIES ${corefoundation})
     list(APPEND CLConform_LIBRARIES ${iokit})
 endif(APPLE)
+
+message(STATUS "CLConform_LIBRARIES: ${CLConform_LIBRARIES}")
 
 include_directories(SYSTEM ${CL_INCLUDE_DIR})
 include_directories(SYSTEM ${SPIRV_INCLUDE_DIR}/include)
