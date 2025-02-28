@@ -299,6 +299,7 @@ int test_fill_image_generic(cl_context context, cl_command_queue queue,
 
     // Unmap the image.
     error = clEnqueueUnmapMemObject(queue, image, mapped, 0, NULL, NULL);
+    error = error | clFinish(queue);
     if (error != CL_SUCCESS)
     {
         log_error( "ERROR: Unable to unmap image after verify: %s\n", IGetErrorString( error ) );
