@@ -379,7 +379,15 @@ cl_int Test(cl_uint job_id, cl_uint thread_id, void *data)
     // Calculate the correctly rounded reference result
     FPU_mode_type oldMode;
     memset(&oldMode, 0, sizeof(oldMode));
-    if (ftz || relaxedMode) ForceFTZ(&oldMode);
+    if (ftz || relaxedMode) {
+#ifdef __riscv
+        log_error("Error: RISC-V does not support FTZ / RelaxedMode \n");
+        return -1;
+
+#else
+        ForceFTZ(&oldMode);
+#endif
+    }
 
     // Set the rounding mode to match the device
     oldRoundMode = kRoundToNearestEven;
@@ -407,7 +415,9 @@ cl_int Test(cl_uint job_id, cl_uint thread_id, void *data)
 
     if (gIsInRTZMode) (void)set_round(oldRoundMode, kfloat);
 
+#ifndef __riscv
     if (ftz || relaxedMode) RestoreFPState(&oldMode);
+#endif
 
     // Read the data back -- no need to wait for the first N-1 buffers but wait
     // for the last buffer. This is an in order queue.
@@ -698,9 +708,14 @@ int TestFunc_Float_Float_Float_Operator(const Func *f, MTdata d,
 
     test_info.f = f;
     test_info.ulps = gIsEmbedded ? f->float_embedded_ulps : f->float_ulps;
+#ifdef __riscv
+    test_info.ftz = 0;
+    test_info.relaxedMode = 0;
+#else
     test_info.ftz =
         f->ftz || gForceFTZ || 0 == (CL_FP_DENORM & gFloatCapabilities);
     test_info.relaxedMode = relaxedMode;
+#endif
 
     test_info.tinfo.resize(test_info.threadCount);
     for (cl_uint i = 0; i < test_info.threadCount; i++)

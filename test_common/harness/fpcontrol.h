@@ -16,6 +16,12 @@
 #ifndef _fpcontrol_h
 #define _fpcontrol_h
 
+#ifdef __riscv
+
+typedef int FPU_mode_type;
+
+#else
+
 #include <cstdint>
 
 // In order to get tests for correctly rounded operations (e.g. multiply) to
@@ -77,6 +83,8 @@ inline void ForceFTZ(FPU_mode_type *oldMode)
     _WriteStatusReg(ARM64_FPCR, fpscr | (1U << 24));
 #elif defined(__mips__)
     fpa_bissr(FPA_CSR_FS);
+#elif defined(__riscv)
+    return;
 #else
 #error ForceFTZ needs an implentation
 #endif
@@ -110,6 +118,8 @@ inline void DisableFTZ(FPU_mode_type *oldMode)
     _WriteStatusReg(ARM64_FPCR, fpscr & ~(1U << 24));
 #elif defined(__mips__)
     fpa_bicsr(FPA_CSR_FS);
+#elif defined(__riscv)
+    return;
 #else
 #error DisableFTZ needs an implentation
 #endif
@@ -132,12 +142,17 @@ inline void RestoreFPState(FPU_mode_type *mode)
     _WriteStatusReg(ARM64_FPCR, *mode);
 #elif defined(__mips__)
     // Mips runs by default with DAZ=1 FTZ=1
+#elif defined(__riscv)
+    return;
 #else
 #error RestoreFPState needs an implementation
 #endif
 }
+
 #else
 #error ForceFTZ and RestoreFPState need implentations
 #endif
 
-#endif
+#endif // __riscv
+
+#endif // _fpcontrol_h
