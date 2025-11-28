@@ -16,6 +16,12 @@
 #ifndef _fpcontrol_h
 #define _fpcontrol_h
 
+#ifdef __riscv
+
+typedef int FPU_mode_type;
+
+#else
+
 #include <cstdint>
 
 // In order to get tests for correctly rounded operations (e.g. multiply) to
@@ -48,8 +54,6 @@ extern __thread fpu_control_t fpu_control;
 #elif defined(__mips__)
 #include "mips/m32c1.h"
 #endif
-
-#ifndef __riscv
 
 // Set the reference hardware floating point unit to FTZ mode
 inline void ForceFTZ(FPU_mode_type *oldMode)
@@ -144,6 +148,7 @@ inline void RestoreFPState(FPU_mode_type *mode)
 #error RestoreFPState needs an implementation
 #endif
 }
+
 #else
 #error ForceFTZ and RestoreFPState need implentations
 #endif

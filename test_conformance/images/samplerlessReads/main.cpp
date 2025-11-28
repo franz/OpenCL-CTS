@@ -151,8 +151,10 @@ int main(int argc, const char *argv[])
         test_registry::getInstance().definitions(), false, 0,
         verifyImageSupport);
 
+#ifndef __riscv
     // Restore FP state before leaving
     RestoreFPState(&oldMode);
+#endif
 
     free(argList);
     return ret;

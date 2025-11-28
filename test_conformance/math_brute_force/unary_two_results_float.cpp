@@ -181,7 +181,9 @@ int TestFunc_Float2_Float(const Func *f, MTdata d, bool relaxedMode)
         // Get that moving
         if ((error = clFlush(gQueue))) vlog("clFlush failed\n");
 
+#ifndef __riscv
         FPU_mode_type oldMode = 0;
+#endif
         RoundingMode oldRoundMode = kRoundToNearestEven;
         if (isFract)
         {
@@ -237,8 +239,9 @@ int TestFunc_Float2_Float(const Func *f, MTdata d, bool relaxedMode)
             }
         }
 
+#ifndef __riscv
         if (isFract && ftz) RestoreFPState(&oldMode);
-
+#endif
         // Read the data back
         for (auto j = gMinVectorSizeIndex; j < gMaxVectorSizeIndex; j++)
         {

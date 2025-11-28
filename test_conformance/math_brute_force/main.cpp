@@ -414,7 +414,9 @@ int main(int argc, const char *argv[])
         test_registry::getInstance().num_tests(),
         test_registry::getInstance().definitions(), true, 0, InitCL);
 
+#ifndef __riscv
     RestoreFPState(&oldMode);
+#endif
 
     if (gQueue)
     {

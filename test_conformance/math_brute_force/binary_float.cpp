@@ -390,7 +390,6 @@ cl_int Test(cl_uint job_id, cl_uint thread_id, void *data)
 #ifdef __riscv
             log_error("Error: RISC-V does not support FTZ / RelaxedMode \n");
             return -1;
-
 #else
             ForceFTZ(&oldMode);
 #endif
@@ -424,7 +423,9 @@ cl_int Test(cl_uint job_id, cl_uint thread_id, void *data)
             r[j] = (float)ref_func(s[j], s2[j]);
     }
 
+#ifndef __riscv
     if (isFDim && ftz) RestoreFPState(&oldMode);
+#endif
 
     // Read the data back -- no need to wait for the first N-1 buffers but wait
     // for the last buffer. This is an in order queue.

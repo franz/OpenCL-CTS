@@ -615,8 +615,8 @@ test_status InitCL( cl_device_id device )
             return TEST_FAIL;
         }
 
-        void *ftzInfo = NULL;
 #ifndef __riscv
+        void *ftzInfo = NULL;
         if( gForceFTZ )
             ftzInfo = FlushToZero();
 #endif

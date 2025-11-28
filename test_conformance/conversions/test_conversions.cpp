@@ -392,7 +392,7 @@ test_status InitCL(cl_device_id device)
 #ifdef __riscv
     if (gForceFTZ) {
         log_error("RISC-V does not support FTZ on Host Side\n");
-        return CL_INVALID_VALUE;
+        return TEST_FAIL;
     }
 #endif
 

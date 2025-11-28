@@ -286,7 +286,9 @@ cl_int TestHalf(cl_uint job_id, cl_uint thread_id, void *data)
         r[j] = HFF(func.f_ff(s[j], s2[j]));
     }
 
+#ifndef __riscv
     if (ftz) RestoreFPState(&oldMode);
+#endif
 
     // Read the data back -- no need to wait for the first N-1 buffers but wait
     // for the last buffer. This is an in order queue.

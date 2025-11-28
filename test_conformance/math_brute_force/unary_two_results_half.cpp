@@ -209,7 +209,9 @@ int TestFunc_Half2_Half(const Func *f, MTdata d, bool relaxedMode)
             }
         }
 
+#ifndef __riscv
         if (isFract && ftz) RestoreFPState(&oldMode);
+#endif
 
         // Read the data back
         for (auto j = gMinVectorSizeIndex; j < gMaxVectorSizeIndex; j++)

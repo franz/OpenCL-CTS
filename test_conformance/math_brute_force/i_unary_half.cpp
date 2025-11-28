@@ -59,9 +59,9 @@ int TestFunc_Int_Half(const Func *f, MTdata d, bool relaxedMode)
 #ifndef __riscv
     FPU_mode_type oldMode;
     DisableFTZ(&oldMode);
-#endif
     std::shared_ptr<int> at_scope_exit(
         nullptr, [&oldMode](int *) { RestoreFPState(&oldMode); });
+#endif
 
     // Init the kernels
     {

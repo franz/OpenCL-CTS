@@ -415,7 +415,9 @@ cl_int Test(cl_uint job_id, cl_uint thread_id, void *data)
 
     if (gIsInRTZMode) (void)set_round(oldRoundMode, kfloat);
 
+#ifndef __riscv
     if (ftz || relaxedMode) RestoreFPState(&oldMode);
+#endif
 
     // Read the data back -- no need to wait for the first N-1 buffers but wait
     // for the last buffer. This is an in order queue.

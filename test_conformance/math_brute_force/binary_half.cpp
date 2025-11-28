@@ -256,12 +256,16 @@ cl_int TestHalf(cl_uint job_id, cl_uint thread_id, void *data)
     }
 
     cl_half_rounding_mode halfRoundingMode = CL_HALF_RTE;
+#ifndef __riscv
     FPU_mode_type oldMode;
+#endif
     oldRoundMode = kRoundToNearestEven;
     if (isFDim)
     {
         // Calculate the correctly rounded reference result
+#ifndef __riscv
         memset(&oldMode, 0, sizeof(oldMode));
+#endif
         if (ftz) {
 #ifdef __riscv
           log_error("RISC-V does not support FTZ on Host Side\n");

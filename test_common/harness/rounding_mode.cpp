@@ -201,6 +201,9 @@ RoundingMode get_round(void)
 #elif defined(__mips__)
 #include "mips/m32c1.h"
 #endif
+
+#ifndef __riscv
+
 void *FlushToZero(void)
 {
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
@@ -273,3 +276,5 @@ void UnFlushToZero(void *p)
 #error  Please configure FlushToZero and UnFlushToZero to behave properly on this operating system.
 #endif
 }
+
+#endif // __riscv
