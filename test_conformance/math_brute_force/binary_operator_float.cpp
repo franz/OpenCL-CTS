@@ -708,9 +708,14 @@ int TestFunc_Float_Float_Float_Operator(const Func *f, MTdata d,
 
     test_info.f = f;
     test_info.ulps = gIsEmbedded ? f->float_embedded_ulps : f->float_ulps;
+#ifdef __riscv
+    test_info.ftz = 0;
+    test_info.relaxedMode = 0;
+#else
     test_info.ftz =
         f->ftz || gForceFTZ || 0 == (CL_FP_DENORM & gFloatCapabilities);
     test_info.relaxedMode = relaxedMode;
+#endif
 
     test_info.tinfo.resize(test_info.threadCount);
     for (cl_uint i = 0; i < test_info.threadCount; i++)
