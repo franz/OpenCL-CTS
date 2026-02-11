@@ -404,19 +404,15 @@ int main(int argc, const char *argv[])
 
     gMTdata = MTdataHolder(gRandomSeed);
 
-#ifndef __riscv
     FPU_mode_type oldMode;
     DisableFTZ(&oldMode);
-#endif
 
     int ret = runTestHarnessWithCheck(
         gTestNames.size(), gTestNames.data(),
         test_registry::getInstance().num_tests(),
         test_registry::getInstance().definitions(), true, 0, InitCL);
 
-#ifndef __riscv
     RestoreFPState(&oldMode);
-#endif
 
     if (gQueue)
     {

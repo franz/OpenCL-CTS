@@ -191,7 +191,7 @@ double sse_mul_sd(double x, double y)
 }
 #endif
 
-#ifdef __PPC__
+#if defined(__PPC__) || defined(__riscv)
 float ppc_mul(float a, float b)
 {
     float p;
@@ -411,12 +411,6 @@ test_status InitCL( cl_device_id device )
     if(0 == (CL_FP_DENORM & floatCapabilities) )
         gForceFTZ ^= 1;
 
-#ifdef __riscv
-    if (gForceFTZ) {
-        log_error("RISC-V does not support FTZ on Host Side\n");
-        return TEST_FAIL;
-    }
-#endif
     // check for cl_khr_fp64
     gHasDouble = is_extension_available(device, "cl_khr_fp64" );
 
@@ -615,11 +609,9 @@ test_status InitCL( cl_device_id device )
             return TEST_FAIL;
         }
 
-#ifndef __riscv
         void *ftzInfo = NULL;
         if( gForceFTZ )
             ftzInfo = FlushToZero();
-#endif
 
         if ((CL_FP_ROUND_TO_ZERO == get_default_rounding_mode(device)) && gIsEmbedded) {
             oldRoundMode = set_round(kRoundTowardZero, kfloat);
@@ -640,7 +632,9 @@ test_status InitCL( cl_device_id device )
             // turn that off
             f3[i] = sse_mul(q, q2);
             f4[i] = sse_mul(-q, q2);
-#elif defined(__PPC__)
+#elif (defined(__PPC__) || defined (__riscv))
+            // RISC-V CPUs with default 'f' fp32 extension do not support enabling/disabling
+            // FTZ mode, subnormals are always handled without FTZ.
             // None of the current generation PPC processors support HW
             // FTZ, emulate it in sw.
             f3[i] = ppc_mul(q, q2);
@@ -656,10 +650,8 @@ test_status InitCL( cl_device_id device )
                                           (fabsf(q2) == FLT_MAX) || (q2 != q2)));
         }
 
-#ifndef __riscv
         if( gForceFTZ )
             UnFlushToZero(ftzInfo);
-#endif
 
     if (isRTZ)
       (void)set_round(oldRoundMode, kfloat);
@@ -733,9 +725,9 @@ test_status InitCL( cl_device_id device )
                 skipTest[j][i] = (bufSkip[i] ||
                                   (gSkipNanInf && (FE_OVERFLOW == (FE_OVERFLOW & fetestexcept(FE_OVERFLOW)))));
 
-#if defined(__PPC__)
+#if defined(__PPC__) || defined(__riscv)
                 // Since the current Power processors don't emulate flush to zero in HW,
-                // it must be emulated in SW instead.
+                // it must be emulated in SW instead. (same for RISC-V CPUs with 'f' extension)
                 if (gForceFTZ)
                 {
                     if ((fabsf(correct[j][i]) < FLT_MIN) && (correct[j][i] != 0.0f))
@@ -750,10 +742,9 @@ test_status InitCL( cl_device_id device )
             // for doubles. We disable FTZ if this is default on
             // the platform (like ARM) for reference result computation
             // It is no-op if platform default is not FTZ (e.g. x86)
-#ifndef __riscv
             FPU_mode_type oldMode;
             DisableFTZ( &oldMode );
-#endif
+
             buf3_double = (double *)malloc( BUFFER_SIZE );
             buf4_double = (double *)malloc( BUFFER_SIZE );
             buf5_double = (double *)malloc( BUFFER_SIZE );
@@ -772,7 +763,6 @@ test_status InitCL( cl_device_id device )
                     return TEST_FAIL;
                 }
             }
-
 
             double *f  = (double*) buf1;
             double *f2 = (double*) buf2;
@@ -836,11 +826,9 @@ test_status InitCL( cl_device_id device )
 #endif
             }
 
-#ifndef __riscv
             // Restore previous FP state since we modified it for
             // reference result computation (see DisableFTZ call above)
             RestoreFPState(&oldMode);
-#endif
         }
         free(bufSkip);
     }

@@ -202,8 +202,6 @@ RoundingMode get_round(void)
 #include "mips/m32c1.h"
 #endif
 
-#ifndef __riscv
-
 void *FlushToZero(void)
 {
 #if defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
@@ -233,6 +231,8 @@ void *FlushToZero(void)
     return NULL;
 #elif defined(__mips__)
     fpa_bissr(FPA_CSR_FS);
+    return NULL;
+#elif defined(__riscv)
     return NULL;
 #else
 #error Unknown arch
@@ -269,6 +269,8 @@ void UnFlushToZero(void *p)
     _FPU_SETCW(flags);
 #elif defined(__mips__)
     fpa_bicsr(FPA_CSR_FS);
+#elif defined(__riscv)
+    return NULL;
 #else
 #error Unknown arch
 #endif

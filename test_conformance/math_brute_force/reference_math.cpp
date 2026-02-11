@@ -482,10 +482,8 @@ float reference_fma(float a, float b, float c, int shouldFlush)
         0 == (ub.u & ~kMSB) || // b == 0, defeat host FTZ behavior
         0 == (uc.u & ~kMSB)) // c == 0, defeat host FTZ behavior
     {
-#ifndef __riscv
         FPU_mode_type oldMode;
         memset(&oldMode, 0, sizeof(oldMode));
-#endif
         RoundingMode oldRoundMode = kRoundToNearestEven;
         if (isinf(c) && !isinf(a) && !isinf(b)) return (c + a) + b;
 
@@ -871,7 +869,9 @@ double reference_add(double x, double y)
     __m128 vb = _mm_set_ss((float)b);
     va = _mm_add_ss(va, vb);
     _mm_store_ss((float *)&a, va);
-#elif defined(__PPC__)
+#elif defined(__PPC__) || defined(__riscv)
+    // RISC-V CPUs with default 'f' fp32 extension do not support any way to
+    // enable/disable FTZ mode, subnormals are always handled without flushing.
     // Most Power host CPUs do not support the non-IEEE mode (NI) which flushes
     // denorm's to zero. As such, the reference add with FTZ must be emulated in
     // sw.
@@ -984,7 +984,7 @@ double reference_multiply(double x, double y)
     __m128 vb = _mm_set_ss((float)b);
     va = _mm_mul_ss(va, vb);
     _mm_store_ss((float *)&a, va);
-#elif defined(__PPC__)
+#elif defined(__PPC__) || defined(__riscv)
     // Most Power host CPUs do not support the non-IEEE mode (NI) which flushes
     // denorm's to zero. As such, the reference multiply with FTZ must be
     // emulated in sw.
@@ -5822,3 +5822,4 @@ long double reference_erfl(long double x) { return erf(x); }
 
 double reference_erfc(double x) { return erfc(x); }
 double reference_erf(double x) { return erf(x); }
+
