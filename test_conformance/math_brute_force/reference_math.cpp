@@ -483,21 +483,13 @@ float reference_fma(float a, float b, float c, int shouldFlush)
         0 == (uc.u & ~kMSB)) // c == 0, defeat host FTZ behavior
     {
         FPU_mode_type oldMode;
-        memset(&oldMode, 0, sizeof(oldMode));
         RoundingMode oldRoundMode = kRoundToNearestEven;
         if (isinf(c) && !isinf(a) && !isinf(b)) return (c + a) + b;
 
         if (gIsInRTZMode) oldRoundMode = set_round(kRoundTowardZero, kfloat);
 
-        if (shouldFlush) {
-#ifdef __riscv
-            log_error("Error: RISC-V does not support FTZ / RelaxedMode \n");
-            return -1;
-
-#else
-            ForceFTZ(&oldMode);
-#endif
-        }
+        memset(&oldMode, 0, sizeof(oldMode));
+        if (shouldFlush) ForceFTZ(&oldMode);
 
         a = (float)reference_multiply(
             a, b); // some risk that the compiler will insert a non-compliant
@@ -506,9 +498,7 @@ float reference_fma(float a, float b, float c, int shouldFlush)
             a,
             c); // We use STDC FP_CONTRACT OFF above to attempt to defeat that.
 
-#ifndef __riscv
         if (shouldFlush) RestoreFPState(&oldMode);
-#endif
 
         if (gIsInRTZMode) set_round(oldRoundMode, kfloat);
         return a;
