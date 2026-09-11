@@ -741,6 +741,8 @@ static const std::vector<float> floatSpecialValues = {
     MAKE_HEX_FLOAT(-0x1.000002p31f, -0x1000002L, 7),
     MAKE_HEX_FLOAT(-0x1.0p31f, -0x1L, 31),
     MAKE_HEX_FLOAT(-0x1.fffffep30f, -0x1fffffeL, 6),
+    0x1.20abd6p-14, // ldexp in POCL
+    -0x1.6a24ep-12, // ldexp in POCL
     -1000.f,
     -100.f,
     -4.0f,
@@ -853,8 +855,8 @@ const std::vector<cl_half> &getHalfSpecialValues() { return halfSpecialValues; }
 static const std::vector<int> intSpecialValues = {
     0,           1,           2,           3,          126,        127,
     128,         0x02000001,  0x04000001,  1465264071, 1488522147, -1,
-    -2,          -3,          -126,        -127,       -128,       -0x02000001,
-    -0x04000001, -1465264071, -1488522147,
+    -2,          -3,          -126,        -127,       -128,       -131,        -133,
+    -0x02000001, -0x04000001, -1465264071, -1488522147,
 };
 
 const std::vector<int> &getIntSpecialValues() { return intSpecialValues; }
