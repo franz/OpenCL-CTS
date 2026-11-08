@@ -382,11 +382,14 @@ int runTestHarnessWithCheckAndParse(int argc, const char *argv[], int testNum,
     {
         char *fileName = getenv("CL_CONFORMANCE_RESULTS_FILENAME");
 
-        log_info(
-            "Usage: %s %s[<test name>*] [pid<num>] [id<num>] [<device type>]\n",
-            argv[0], help_description.empty() ? "" : "[options] ");
+        log_info("Usage: %s %s[<test name>*] [^<test name>*] [pid<num>] "
+                 "[id<num>] [<device type>]\n",
+                 argv[0], help_description.empty() ? "" : "[options] ");
         log_info("\t<test name>\tOne or more of: (wildcard character '*') "
                  "(default *)\n");
+        log_info("\t^<test name>\tExclude matching test(s) (wildcard "
+                 "character '*' allowed). If only exclusions are given,\n"
+                 "\t\t\tall other tests are run.\n");
         log_info("\tpid<num>\tIndicates platform at index <num> should be used "
                  "(default 0).\n");
         log_info("\tid<num>\t\tIndicates device at index <num> should be used "
@@ -795,7 +798,8 @@ int runTestHarnessWithCheckAndParse(int argc, const char *argv[], int testNum,
 
 static int find_matching_tests(test_definition testList[],
                                unsigned char selectedTestList[], int testNum,
-                               const char *argument, bool isWildcard)
+                               const char *argument, bool isWildcard,
+                               bool exclude = false)
 {
     int found_tests = 0;
     size_t wildcard_length = strlen(argument) - 1; /* -1 for the asterisk */
@@ -806,7 +810,12 @@ static int find_matching_tests(test_definition testList[],
             || (isWildcard
                 && strncmp(testList[i].name, argument, wildcard_length) == 0))
         {
-            if (selectedTestList[i])
+            found_tests = 1;
+            if (exclude)
+            {
+                selectedTestList[i] = 0;
+            }
+            else if (selectedTestList[i])
             {
                 log_error("ERROR: Test '%s' has already been selected.\n",
                           testList[i].name);
@@ -821,19 +830,19 @@ static int find_matching_tests(test_definition testList[],
             else
             {
                 selectedTestList[i] = 1;
-                found_tests = 1;
-                if (!isWildcard)
-                {
-                    break;
-                }
+            }
+
+            if (!isWildcard)
+            {
+                break;
             }
         }
     }
 
     if (!found_tests)
     {
-        log_error("ERROR: The argument '%s' did not match any test names.\n",
-                  argument);
+        log_error("ERROR: The argument '%s%s' did not match any test names.\n",
+                  exclude ? "^" : "", argument);
         return EXIT_FAILURE;
     }
 
@@ -879,33 +888,72 @@ select_command_line_tests(int argc, const char *argv[], int testNum,
 {
     selectedTestList.assign(testNum, 0);
 
-    if (argc == 1)
-    {
-        /* No actual arguments, all tests will be run. */
-        std::fill(selectedTestList.begin(), selectedTestList.end(), 1);
-        return EXIT_SUCCESS;
-    }
-
+    /* Arguments starting with '^' exclude tests (wildcards allowed). */
+    bool haveInclusions = false;
     for (int i = 1; i < argc; i++)
     {
-        int ret = EXIT_SUCCESS;
-        if (strchr(argv[i], '*') != NULL)
+        if (argv[i][0] != '^')
         {
-            ret = find_matching_tests(testList, selectedTestList.data(),
-                                      testNum, argv[i], true);
-        }
-        else if (strcmp(argv[i], "all") == 0)
-        {
-            std::fill(selectedTestList.begin(), selectedTestList.end(), 1);
+            haveInclusions = true;
             break;
         }
-        else
-        {
-            ret = find_matching_tests(testList, selectedTestList.data(),
-                                      testNum, argv[i], false);
-        }
+    }
 
-        if (ret == EXIT_FAILURE)
+    if (!haveInclusions)
+    {
+        /* No inclusion arguments, start with all tests selected. */
+        std::fill(selectedTestList.begin(), selectedTestList.end(), 1);
+    }
+    else
+    {
+        /* First pass: select tests. */
+        for (int i = 1; i < argc; i++)
+        {
+            if (argv[i][0] == '^')
+            {
+                continue;
+            }
+
+            int ret = EXIT_SUCCESS;
+            if (strchr(argv[i], '*') != NULL)
+            {
+                ret = find_matching_tests(testList, selectedTestList.data(),
+                                          testNum, argv[i], true);
+            }
+            else if (strcmp(argv[i], "all") == 0)
+            {
+                std::fill(selectedTestList.begin(), selectedTestList.end(), 1);
+                break;
+            }
+            else
+            {
+                ret = find_matching_tests(testList, selectedTestList.data(),
+                                          testNum, argv[i], false);
+            }
+
+            if (ret == EXIT_FAILURE)
+            {
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
+    /* Second pass: deselect excluded tests. */
+    for (int i = 1; i < argc; i++)
+    {
+        if (argv[i][0] != '^')
+        {
+            continue;
+        }
+        const char *name = argv[i] + 1;
+        if (*name == 0)
+        {
+            log_error("ERROR: Empty test name after '^'.\n");
+            return EXIT_FAILURE;
+        }
+        if (find_matching_tests(testList, selectedTestList.data(), testNum,
+                                name, strchr(name, '*') != NULL, true)
+            == EXIT_FAILURE)
         {
             return EXIT_FAILURE;
         }
